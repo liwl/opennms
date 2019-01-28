@@ -13,7 +13,7 @@ ARG REPO_KEY_URL="https://${REPO_HOST}/OPENNMS-GPG-KEY"
 
 ARG REMOTE_RPMS="https://${REPO_HOST}/repofiles/opennms-repo-${REPO_RELEASE}-rhel7.noarch.rpm"
 
-ARG PACKAGES="wget gettext opennms"
+ARG PACKAGES="wget gettext"
 
 COPY ./rpms /tmp/rpms
 
