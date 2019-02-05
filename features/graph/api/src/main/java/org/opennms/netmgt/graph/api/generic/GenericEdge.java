@@ -45,9 +45,13 @@ public class GenericEdge extends AbstractEdge<GenericVertex> {
 
     public GenericEdge(VertexRef source, VertexRef target) {
         super(source, target);
-        properties.put(GenericProperties.LABEL, getLabel());
-        properties.put(GenericProperties.NAMESPACE, getNamespace());
         properties.put(GenericProperties.ID, getId());
+        if (getLabel() != null) {
+            properties.put(GenericProperties.LABEL, getLabel());
+        }
+        if (getNamespace() != null) {
+            properties.put(GenericProperties.NAMESPACE, getNamespace());
+        }
     }
 
     public Map<String, Object> getProperties() {
