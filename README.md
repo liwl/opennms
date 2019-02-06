@@ -1,4 +1,4 @@
-[OpenNMS][]
+[OpenNMS][] [![CircleCI](https://circleci.com/gh/OpenNMS/opennms.svg?style=svg)](https://circleci.com/gh/OpenNMS/opennms)
 ===========
 
 [OpenNMS][] is the world's first enterprise grade network management application platform developed under the open source model.
