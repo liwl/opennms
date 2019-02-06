@@ -1388,25 +1388,25 @@
     <feature name="vaadin" version="${project.version}" description="OpenNMS :: Features :: Vaadin + Dependencies">
         <details>The Vaadin web application framework including some addons and osgi related packages.</details>
         <feature>http-whiteboard</feature>
-        <bundle>wrap:mvn:com.google.gwt/gwt-elemental/2.8.2</bundle>
-        <bundle>wrap:mvn:com.google.gwt/gwt-user/2.8.2/$Export-Package=com.google.*</bundle>
-        <bundle>mvn:com.vaadin/vaadin-context-menu/2.0.0</bundle>
-        <bundle>wrap:mvn:org.vaadin.addon/confirmdialog/3.2.0</bundle>
-        <bundle>wrap:mvn:com.vaadin/vaadin-compatibility-server/8.5.2</bundle>
-        <bundle>wrap:mvn:com.vaadin/vaadin-compatibility-client-compiled/8.5.2</bundle>
-        <bundle>wrap:mvn:com.vaadin/vaadin-compatibility-client/8.5.2</bundle>
-        <bundle>wrap:mvn:com.vaadin/vaadin-compatibility-themes/8.5.2</bundle>
-        <bundle>wrap:mvn:com.vaadin/vaadin-compatibility-shared/8.5.2</bundle>
-        <bundle>mvn:com.vaadin/vaadin-server/8.5.2</bundle>
-        <bundle>mvn:com.vaadin/vaadin-client-compiled/8.5.2</bundle>
-        <bundle>mvn:com.vaadin/vaadin-client/8.5.2</bundle>
-        <bundle>mvn:com.vaadin/vaadin-themes/8.5.2</bundle>
-        <bundle>mvn:com.vaadin/vaadin-shared/8.5.2</bundle>
+        <bundle>wrap:mvn:com.google.gwt/gwt-elemental/${gwtVersion}</bundle>
+        <bundle>wrap:mvn:com.google.gwt/gwt-user/${gwtVersion}/$Export-Package=com.google.*</bundle>
+        <bundle>mvn:com.vaadin/vaadin-context-menu/${vaadinAddonContextMenuVersion}</bundle>
+        <bundle>wrap:mvn:org.vaadin.addon/confirmdialog/${vaadinAddonConfirmDialogVersion}</bundle>
+        <bundle>wrap:mvn:com.vaadin/vaadin-compatibility-server/${vaadinVersion}</bundle>
+        <bundle>wrap:mvn:com.vaadin/vaadin-compatibility-client-compiled/${vaadinVersion}</bundle>
+        <bundle>wrap:mvn:com.vaadin/vaadin-compatibility-client/${vaadinVersion}</bundle>
+        <bundle>wrap:mvn:com.vaadin/vaadin-compatibility-themes/${vaadinVersion}</bundle>
+        <bundle>wrap:mvn:com.vaadin/vaadin-compatibility-shared/${vaadinVersion}</bundle>
+        <bundle>mvn:com.vaadin/vaadin-server/${vaadinVersion}</bundle>
+        <bundle>mvn:com.vaadin/vaadin-client-compiled/${vaadinVersion}</bundle>
+        <bundle>mvn:com.vaadin/vaadin-client/${vaadinVersion}</bundle>
+        <bundle>mvn:com.vaadin/vaadin-themes/${vaadinVersion}</bundle>
+        <bundle>mvn:com.vaadin/vaadin-shared/${vaadinVersion}</bundle>
         <bundle>mvn:com.vaadin.external/gentyref/1.2.0.vaadin1</bundle>
         <bundle>mvn:org.jsoup/jsoup/1.11.2</bundle>
         <bundle>mvn:org.opennms.features.vaadin-components/extender-service/${project.version}</bundle>
-        <bundle>mvn:com.google.guava/guava/18.0</bundle>
-        <bundle>mvn:org.json/json/20171018</bundle>
+        <bundle>mvn:com.google.guava/guava/${guavaVersion}</bundle>
+        <bundle>mvn:org.json/json/${jsonVersion}</bundle>
         <bundle>mvn:org.opennms.osgi/opennms-osgi-core/${project.version}</bundle>
         <bundle>mvn:org.opennms.features.themes/onms-default-theme/${project.version}</bundle>
     </feature>
@@ -1463,7 +1463,7 @@
         <details>GraphML runtime and plugins for the OpenNMS topology web app.</details>
         <feature>opennms-topology-runtime-base</feature>
         <bundle>mvn:org.opennms.features.topology.plugins.topo/graphml/${project.version}</bundle>
-        <bundle>mvn:org.codehaus.groovy/groovy-all/2.4.5</bundle>
+        <bundle>mvn:org.codehaus.groovy/groovy-all/${groovyVersion}</bundle>
         <bundle>mvn:org.opennms.features/org.opennms.features.osgi-jsr223/${project.version}</bundle>
     </feature>
     <feature name="opennms-topology-runtime-asset" version="${project.version}" description="OpenNMS :: Features :: Topology :: Features :: Runtime :: Asset">
@@ -1553,7 +1553,7 @@
         <bundle>mvn:org.opennms.features/jira-troubleticketer/${project.version}</bundle>
         <bundle>mvn:org.opennms.features.ticketing/org.opennms.features.ticketing.api/${project.version}</bundle>
         <bundle>mvn:org.opennms.core/org.opennms.core.lib/${project.version}</bundle>
-        <bundle>mvn:joda-time/joda-time/2.1</bundle>
+        <bundle>mvn:joda-time/joda-time/${jodaTimeVersion}</bundle>
         <bundle>mvn:org.opennms.features/jira-client/${project.version}</bundle>
     </feature>
     <feature name="datachoices" version="${project.version}" description="OpenNMS :: Features :: Data Choices">
@@ -1563,13 +1563,13 @@
         <feature>javax.servlet</feature>
         <feature>quartz</feature>
         <bundle>mvn:org.opennms.features/datachoices/${project.version}</bundle>
-        <bundle>wrap:mvn:org.freemarker/freemarker/2.3.23</bundle>
-        <bundle>mvn:org.apache.karaf.shell/org.apache.karaf.shell.console/4.1.5</bundle>
-        <bundle>mvn:org.apache.karaf.shell/org.apache.karaf.shell.core/4.1.5</bundle>
-        <bundle>mvn:org.codehaus.jackson/jackson-core-asl/1.9.13</bundle>
-        <bundle>mvn:org.codehaus.jackson/jackson-mapper-asl/1.9.13</bundle>
+        <bundle>wrap:mvn:org.freemarker/freemarker/${freemarkerVersion}</bundle>
+        <bundle>mvn:org.apache.karaf.shell/org.apache.karaf.shell.console/${karafVersion}</bundle>
+        <bundle>mvn:org.apache.karaf.shell/org.apache.karaf.shell.core/${karafVersion}</bundle>
+        <bundle>mvn:org.codehaus.jackson/jackson-core-asl/${jacksonVersion}</bundle>
+        <bundle>mvn:org.codehaus.jackson/jackson-mapper-asl/${jacksonVersion}</bundle>
         <bundle>mvn:org.opennms/opennms-web-api/${project.version}</bundle>
-        <bundle>mvn:org.freemarker/freemarker/2.3.23</bundle>
+        <bundle>mvn:org.freemarker/freemarker/${freemarkerVersion}</bundle>
     </feature>
     <feature name="org.opennms.plugin.licencemanager" version="1.2.0" description="org.opennms.plugin.licencemanager">
         <feature>http</feature>
@@ -1598,19 +1598,19 @@
         <feature>org.opennms.plugin.licencemanager</feature>
         <feature>org.opennms.plugin.featuremanager</feature>
         <bundle>mvn:org.opennms.plugins/vaadin-opennms-pluginmanager/${project.version}</bundle>
-        <bundle>mvn:org.opennms.plugins/org.opennms.plugin.pluginmanager.pluginmanager-core/1.2.0</bundle>
+        <bundle>mvn:org.opennms.plugins/org.opennms.plugin.pluginmanager.pluginmanager-core/${pluginmanagerVersion}</bundle>
         <bundle>mvn:org.opennms.features.vaadin-components/core/${project.version}</bundle>
         <bundle>mvn:org.opennms.features.vaadin-components/widgetset/${project.version}</bundle>
     </feature>
     <feature name="alarm-change-notifier" version="${project.version}" description="alarm-change-notifier">
         <details>Feature definition for alarm-change-notifier</details>
         <bundle>mvn:com.impossibl.pgjdbc-ng/pgjdbc-ng/0.7.1</bundle>
-        <bundle>mvn:io.netty/netty-common/4.1.9.Final</bundle>
-        <bundle>mvn:io.netty/netty-transport/4.1.9.Final</bundle>
-        <bundle>mvn:io.netty/netty-buffer/4.1.9.Final</bundle>
-        <bundle>mvn:io.netty/netty-handler/4.1.9.Final</bundle>
-        <bundle>mvn:io.netty/netty-resolver/4.1.9.Final</bundle>
-        <bundle>mvn:io.netty/netty-codec/4.1.9.Final</bundle>
+        <bundle>mvn:io.netty/netty-common/${netty4Version}</bundle>
+        <bundle>mvn:io.netty/netty-transport/${netty4Version}</bundle>
+        <bundle>mvn:io.netty/netty-buffer/${netty4Version}</bundle>
+        <bundle>mvn:io.netty/netty-handler/${netty4Version}</bundle>
+        <bundle>mvn:io.netty/netty-resolver/${netty4Version}</bundle>
+        <bundle>mvn:io.netty/netty-codec/${netty4Version}</bundle>
         <bundle>mvn:org.opennms.plugins/alarm-change-notifier.pg-jdbc-utils/${project.version}</bundle>
         <bundle>mvn:org.opennms.plugins/alarm-change-notifier.main-module/${project.version}</bundle>
         <bundle>mvn:org.opennms.plugins/alarm-change-notifier.product-descriptor/${project.version}</bundle>
@@ -1620,13 +1620,13 @@
         <details>OpenNMS :: Features :: ElasticSearch Rest</details>
         <feature>opennms-jest</feature>
         <bundle>mvn:io.dropwizard.metrics/metrics-core/3.1.2</bundle>
-        <bundle>mvn:joda-time/joda-time/2.1</bundle>
-        <bundle>wrap:mvn:com.swrve/rate-limited-logger/1.1.0</bundle>
+        <bundle>mvn:joda-time/joda-time/${jodaTimeVersion}</bundle>
+        <bundle>wrap:mvn:com.swrve/rate-limited-logger/${rateLimitedLoggerVersion}</bundle>
         <bundle>mvn:org.opennms.core.ipc.sink/org.opennms.core.ipc.sink.api/${project.version}</bundle>
         <bundle>mvn:org.opennms.core.ipc.sink/org.opennms.core.ipc.sink.common/${project.version}</bundle>
         <bundle>mvn:org.opennms.core.ipc.sink/org.opennms.core.ipc.sink.xml/${project.version}</bundle>
         <bundle>mvn:org.opennms.features/org.opennms.features.opennms-es-rest/${project.version}</bundle>
-        <bundle>mvn:com.googlecode.json-simple/json-simple/1.1.1</bundle>
+        <bundle>mvn:com.googlecode.json-simple/json-simple/${json-simpleVersion}</bundle>
         <bundle>mvn:org.opennms.core/org.opennms.core.cache/${project.version}</bundle>
     </feature>
     <feature name="internal-plugins-descriptor" version="${project.version}">
@@ -1636,10 +1636,10 @@
     </feature>
     <feature name="opennms-jest" version="${project.version}" description="OpenNMS :: Features :: Jest :: Feature definition">
         <details>Feature definition for Jest (ElasticSearch Java ReST Client)</details>
-        <bundle>wrap:mvn:com.google.code.gson/gson/2.8.0</bundle>
+        <bundle>wrap:mvn:com.google.code.gson/gson/${jestGsonVersion}</bundle>
         <bundle>wrap:mvn:org.apache.httpcomponents/httpcore-nio/4.4.6</bundle>
         <bundle>mvn:org.opennms.features.jest/org.opennms.features.jest.client/${project.version}</bundle>
-        <bundle>mvn:io.searchbox/jest-complete-osgi/5.3.3</bundle>
+        <bundle>mvn:io.searchbox/jest-complete-osgi/${jestVersion}</bundle>
         <bundle>mvn:com.google.guava/guava/21.0</bundle>
         <bundle>mvn:commons-codec/commons-codec/1.9</bundle>
         <bundle>mvn:org.apache.httpcomponents/httpcore-osgi/4.4.6</bundle>
