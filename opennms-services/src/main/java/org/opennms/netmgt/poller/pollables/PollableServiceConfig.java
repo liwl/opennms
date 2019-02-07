@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 import org.opennms.core.rpc.api.RpcExceptionHandler;
 import org.opennms.core.rpc.api.RpcExceptionUtils;
@@ -50,6 +51,8 @@ import org.opennms.netmgt.scheduler.ScheduleInterval;
 import org.opennms.netmgt.scheduler.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.google.common.base.Strings;
 
 /**
  * Represents a PollableServiceConfig
@@ -70,7 +73,7 @@ public class PollableServiceConfig implements PollConfig, ScheduleInterval {
     private final LocationAwarePollerClient m_locationAwarePollerClient;
     private final LatencyStoringServiceMonitorAdaptor m_latencyStoringServiceMonitorAdaptor;
     private final InvertedStatusServiceMonitorAdaptor m_invertedStatusServiceMonitorAdaptor = new InvertedStatusServiceMonitorAdaptor();
-    private final ServiceMonitor m_serviceMonitor;
+    private ServiceMonitor m_serviceMonitor;
 
     /**
      * <p>Constructor for PollableServiceConfig.</p>
@@ -90,7 +93,7 @@ public class PollableServiceConfig implements PollConfig, ScheduleInterval {
         m_configService = findService(pkg);
         m_locationAwarePollerClient = Objects.requireNonNull(locationAwarePollerClient);
         m_latencyStoringServiceMonitorAdaptor = new LatencyStoringServiceMonitorAdaptor(pollerConfig, pkg, persisterFactory, resourceStorageDao);
-        m_serviceMonitor = pollerConfig.getServiceMonitor(svc.getSvcName());
+        m_serviceMonitor = pollerConfig.getServiceMonitor(m_configService.getName());
     }
 
     /**
@@ -101,6 +104,18 @@ public class PollableServiceConfig implements PollConfig, ScheduleInterval {
         for (Service s : m_pkg.getServices()) {
             if (s.getName().equalsIgnoreCase(m_service.getSvcName())) {
                 return s;
+            }
+        }
+
+        // Find service by pattern
+        // TODO: Save resulting groups for parameter expansion
+        for (final Service s : m_pkg.getServices()) {
+            if (!Strings.isNullOrEmpty(s.getPattern())
+                    && Pattern.matches(s.getPattern(), m_service.getSvcName())) {
+                final String status = s.getStatus();
+                if (status == null || status.equals("on")) {
+                    return s;
+                }
             }
         }
 
@@ -177,6 +192,7 @@ public class PollableServiceConfig implements PollConfig, ScheduleInterval {
         }
         m_pkg = newPkg;
         m_configService = findService(m_pkg);
+        m_serviceMonitor = m_pollerConfig.getServiceMonitor(m_configService.getName());
     }
 
     /**
