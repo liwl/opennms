@@ -49,6 +49,7 @@ public interface PollerRequestBuilder {
 
     PollerRequestBuilder withAdaptor(ServiceMonitorAdaptor adaptor);
 
-    CompletableFuture<PollerResponse> execute();
+    PollerRequestBuilder withMetaData(String context, Map<String, String> entries);
 
+    CompletableFuture<PollerResponse> execute();
 }

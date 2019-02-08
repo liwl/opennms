@@ -61,6 +61,8 @@ public class PollerRequestBuilderImpl implements PollerRequestBuilder {
 
     private final List<ServiceMonitorAdaptor> adaptors = new LinkedList<>();
 
+    private final Map<String, Map<String, String>> metaData = new HashMap<>();
+
     private Long ttlInMs;
 
     public PollerRequestBuilderImpl(LocationAwarePollerClientImpl client) {
@@ -113,6 +115,12 @@ public class PollerRequestBuilderImpl implements PollerRequestBuilder {
     @Override
     public PollerRequestBuilder withAdaptor(ServiceMonitorAdaptor adaptor) {
         adaptors.add(adaptor);
+        return this;
+    }
+
+    @Override
+    public PollerRequestBuilder withMetaData(String context, Map<String, String> entries) {
+        this.metaData.put(context, entries);
         return this;
     }
 

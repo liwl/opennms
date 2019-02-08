@@ -28,11 +28,16 @@
 
 package org.opennms.netmgt.poller.pollables;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.opennms.core.rpc.api.RpcExceptionHandler;
 import org.opennms.core.rpc.api.RpcExceptionUtils;
@@ -44,6 +49,7 @@ import org.opennms.netmgt.config.poller.Package;
 import org.opennms.netmgt.config.poller.Parameter;
 import org.opennms.netmgt.config.poller.Service;
 import org.opennms.netmgt.dao.api.ResourceStorageDao;
+import org.opennms.netmgt.model.OnmsNodeMetaData;
 import org.opennms.netmgt.poller.LocationAwarePollerClient;
 import org.opennms.netmgt.poller.PollStatus;
 import org.opennms.netmgt.poller.ServiceMonitor;
@@ -53,6 +59,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Strings;
+import com.google.common.collect.ContiguousSet;
+import com.google.common.collect.DiscreteDomain;
+import com.google.common.collect.Range;
 
 /**
  * Represents a PollableServiceConfig
@@ -70,10 +79,13 @@ public class PollableServiceConfig implements PollConfig, ScheduleInterval {
     private Package m_pkg;
     private Timer m_timer;
     private Service m_configService;
+    private ServiceMonitor m_serviceMonitor;
+
+    private Map<String, String> m_patternMetaData = Collections.emptyMap();
+
     private final LocationAwarePollerClient m_locationAwarePollerClient;
     private final LatencyStoringServiceMonitorAdaptor m_latencyStoringServiceMonitorAdaptor;
     private final InvertedStatusServiceMonitorAdaptor m_invertedStatusServiceMonitorAdaptor = new InvertedStatusServiceMonitorAdaptor();
-    private ServiceMonitor m_serviceMonitor;
 
     /**
      * <p>Constructor for PollableServiceConfig.</p>
@@ -90,37 +102,53 @@ public class PollableServiceConfig implements PollConfig, ScheduleInterval {
         m_pollOutagesConfig = pollOutagesConfig;
         m_pkg = pkg;
         m_timer = timer;
-        m_configService = findService(pkg);
         m_locationAwarePollerClient = Objects.requireNonNull(locationAwarePollerClient);
         m_latencyStoringServiceMonitorAdaptor = new LatencyStoringServiceMonitorAdaptor(pollerConfig, pkg, persisterFactory, resourceStorageDao);
-        m_serviceMonitor = pollerConfig.getServiceMonitor(m_configService.getName());
+
+        this.findService(m_pkg);
     }
 
     /**
      * @param pkg
      * @return
      */
-    private synchronized Service findService(Package pkg) {
+    private synchronized void findService(Package pkg) {
+        Service configService = null;
+
         for (Service s : m_pkg.getServices()) {
             if (s.getName().equalsIgnoreCase(m_service.getSvcName())) {
-                return s;
+                configService = s;
+                break;
             }
         }
 
-        // Find service by pattern
-        // TODO: Save resulting groups for parameter expansion
-        for (final Service s : m_pkg.getServices()) {
-            if (!Strings.isNullOrEmpty(s.getPattern())
-                    && Pattern.matches(s.getPattern(), m_service.getSvcName())) {
-                final String status = s.getStatus();
-                if (status == null || status.equals("on")) {
-                    return s;
+        if (configService == null) {
+            // Find service by pattern
+            for (final Service s : m_pkg.getServices()) {
+                if (!Strings.isNullOrEmpty(s.getPattern())) {
+                    final Matcher matcher = Pattern.compile(s.getPattern()).matcher(m_service.getSvcName()); // TODO fooker: cache compiled pattern
+                    if (matcher.matches()) {
+                        final String status = s.getStatus();
+                        if (status == null || status.equals("on")) {
+                            // Create metadata for matched pattern
+                            m_patternMetaData = IntStream.range(0, matcher.groupCount() + 1)
+                                    .boxed()
+                                    .collect(Collectors.toMap(i -> Integer.toString(i), i -> matcher.group(i)));
+
+                            configService = s;
+                            break;
+                        }
+                    }
                 }
             }
         }
 
-        throw new RuntimeException("Service name not part of package!");
+        if (configService == null) {
+            throw new RuntimeException("Service name not part of package!");
+        }
 
+        m_configService = configService;
+        m_serviceMonitor = m_pollerConfig.getServiceMonitor(m_configService.getName());
     }
 
     /**
@@ -144,6 +172,7 @@ public class PollableServiceConfig implements PollConfig, ScheduleInterval {
                 .withAttributes(getParameters())
                 .withAdaptor(m_latencyStoringServiceMonitorAdaptor)
                 .withAdaptor(m_invertedStatusServiceMonitorAdaptor)
+                .withMetaData("pattern", m_patternMetaData)
                 .execute()
                 .get().getPollStatus();
             LOG.debug("Finish polling {} using pkg {} result = {}", m_service, packageName, result);
@@ -191,8 +220,8 @@ public class PollableServiceConfig implements PollConfig, ScheduleInterval {
             LOG.warn("Package named {} no longer exists.", m_pkg.getName());
         }
         m_pkg = newPkg;
-        m_configService = findService(m_pkg);
-        m_serviceMonitor = m_pollerConfig.getServiceMonitor(m_configService.getName());
+
+        this.findService(m_pkg);
     }
 
     /**
