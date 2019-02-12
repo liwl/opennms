@@ -41,9 +41,9 @@ import org.opennms.core.rpc.utils.RpcMetaDataUtils;
 import org.opennms.netmgt.dao.api.NodeDao;
 import org.opennms.netmgt.model.OnmsNode;
 
-@Command(scope = "meta", name = "test", description="Test Meta-Data replacement")
+@Command(scope = "mate", name = "test", description="Test Meta-Data replacement")
 @Service
-public class MetaCommand implements Action {
+public class MateCommand implements Action {
     @Reference
     public NodeDao nodeDao;
 
