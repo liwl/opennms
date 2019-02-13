@@ -30,6 +30,7 @@ package org.opennms.features.topology.plugins.topo.linkd.internal;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.mock;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -57,7 +58,7 @@ import org.opennms.netmgt.enlinkd.LldpOnmsTopologyUpdater;
 import org.opennms.netmgt.enlinkd.NodesOnmsTopologyUpdater;
 import org.opennms.netmgt.enlinkd.OspfOnmsTopologyUpdater;
 import org.opennms.netmgt.enlinkd.persistence.api.TopologyEntityCache;
-import org.opennms.netmgt.topologies.service.api.OnmsTopologyException;
+import org.opennms.netmgt.topologies.service.api.OnmsTopologyDao;
 import org.opennms.test.JUnitConfigurationEnvironment;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,37 +122,38 @@ public class LinkdTopologyProviderTestIT {
 
     @Test
     @Transactional
-    public void testCdp()throws Exception {
+    public void testCdp() {
         test(TopologyGenerator.Protocol.cdp);
     }
 
     @Test
     @Transactional
-    public void testLldp() throws Exception {
+    public void testLldp() {
         test(TopologyGenerator.Protocol.lldp);
     }
 
     @Test
     @Transactional
-    public void testIsis() throws Exception {
+    public void testIsis() {
         test(TopologyGenerator.Protocol.isis);
     }
 
     @Test
     @Transactional
-    public void testOspf() throws Exception {
+    public void testOspf() {
         test(TopologyGenerator.Protocol.ospf);
     }
 
-    private void test(TopologyGenerator.Protocol protocol) throws OnmsTopologyException{
+    private void test(TopologyGenerator.Protocol protocol) {
         testAmounts(protocol);
         testLinkingBetweenNodes(protocol);
     }
 
-    private void testAmounts(TopologyGenerator.Protocol protocol) throws OnmsTopologyException {
+    private void testAmounts(TopologyGenerator.Protocol protocol) {
 
         TopologySettings settings = TopologySettings.builder()
                 .protocol(protocol)
+                .topologyDao(mock(OnmsTopologyDao.class))
                 .build();
 
         // 1.) Generate topology and verify that the TopologyProvider finds it:
@@ -168,7 +170,7 @@ public class LinkdTopologyProviderTestIT {
         assertEquals(0, linkdTopologyProvider.getVerticesWithoutGroups().size());
     }
 
-    private void refresh() throws OnmsTopologyException {
+    private void refresh() {
         nodesOnmsTopologyUpdater.setTopology(nodesOnmsTopologyUpdater.buildTopology());
         cdpOnmsTopologyUpdater.setTopology(cdpOnmsTopologyUpdater.buildTopology());
         isisOnmsTopologyUpdater.setTopology(isisOnmsTopologyUpdater.buildTopology());
@@ -176,7 +178,7 @@ public class LinkdTopologyProviderTestIT {
         ospfOnmsTopologyUpdater.setTopology(ospfOnmsTopologyUpdater.buildTopology());
         linkdTopologyProvider.refresh();
     }
-    private void verifyAmounts(TopologySettings settings) throws OnmsTopologyException {
+    private void verifyAmounts(TopologySettings settings) {
         refresh();
         List<Vertex> vertices = linkdTopologyProvider.getVerticesWithoutGroups();
 
@@ -193,7 +195,7 @@ public class LinkdTopologyProviderTestIT {
         assertEquals(expectedAmountOfEdges, allEdges.size());
     }
 
-    private void generateTopologyAndRefreshCaches(TopologySettings settings) throws OnmsTopologyException{
+    private void generateTopologyAndRefreshCaches(TopologySettings settings) {
         generator.generateTopology(settings);
         entityCache.refresh();
         
@@ -202,9 +204,8 @@ public class LinkdTopologyProviderTestIT {
 
     /**
      * Generates a ring topology and verifies that each Vertex is connected to it's neighbors.
-     * @throws OnmsTopologyException 
      */
-    private void testLinkingBetweenNodes(TopologyGenerator.Protocol protocol) throws OnmsTopologyException {
+    private void testLinkingBetweenNodes(TopologyGenerator.Protocol protocol) {
 
         // 1.) Generate Topology
         TopologySettings settings = TopologySettings.builder()
@@ -212,6 +213,7 @@ public class LinkdTopologyProviderTestIT {
                 .amountNodes(10) // use 10 so that the label names remain in the single digits => makes sorting easier
                 .amountLinks(20) // one edge is composed of 2 links
                 .topology(TopologyGenerator.Topology.ring) // deterministic behaviour: each node is connected to its neighbors
+                .topologyDao(mock(OnmsTopologyDao.class))
                 .build();
         generateTopologyAndRefreshCaches(settings);
         assertEquals(settings.getAmountNodes(), linkdTopologyProvider.getVerticesWithoutGroups().size());

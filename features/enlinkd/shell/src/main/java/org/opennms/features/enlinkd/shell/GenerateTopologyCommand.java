@@ -37,6 +37,7 @@ import org.opennms.enlinkd.generator.TopologyGenerator;
 import org.opennms.enlinkd.generator.TopologyPersister;
 import org.opennms.enlinkd.generator.TopologySettings;
 import org.opennms.netmgt.dao.api.GenericPersistenceAccessor;
+import org.opennms.netmgt.topologies.service.api.OnmsTopologyDao;
 
 /**
  * Generate a enlinkd topology via karaf command.
@@ -70,6 +71,9 @@ public class GenerateTopologyCommand implements Action {
 
     @Reference
     private GenericPersistenceAccessor genericPersistenceAccessor;
+    
+    @Reference
+    private OnmsTopologyDao onmsTopologyDao;
 
     @Override
     public Object execute() {
@@ -89,6 +93,7 @@ public class GenerateTopologyCommand implements Action {
                 .amountSnmpInterfaces(amountSnmpInterfaces)
                 .protocol(toEnumOrNull(TopologyGenerator.Protocol.class, this.protocol))
                 .topology(toEnumOrNull(TopologyGenerator.Topology.class, this.topology))
+                .topologyDao(onmsTopologyDao)
                 .build();
         generator.generateTopology(settings);
         return null;

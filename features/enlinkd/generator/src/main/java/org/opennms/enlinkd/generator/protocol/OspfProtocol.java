@@ -42,6 +42,7 @@ import org.opennms.enlinkd.generator.util.InetAddressGenerator;
 import org.opennms.netmgt.enlinkd.model.OspfElement;
 import org.opennms.netmgt.enlinkd.model.OspfLink;
 import org.opennms.netmgt.model.OnmsNode;
+import org.opennms.netmgt.topologies.service.api.OnmsTopologyPort;
 
 public class OspfProtocol extends Protocol<OspfElement> {
     private TopologyGenerator.Protocol protocol = TopologyGenerator.Protocol.ospf;
@@ -60,7 +61,7 @@ public class OspfProtocol extends Protocol<OspfElement> {
     private List<OspfLink> createLinks(List<OnmsNode> nodes) {
         PairGenerator<OnmsNode> pairs = createPairGenerator(nodes);
         List<OspfLink> links = new ArrayList<>();
-        for (int i = 0; i < topologySettings.getAmountLinks()/2; i++) {
+        for (int i = 0; i < topologySettings.getAmountLinks() / 2; i++) {
 
             // We create 2 links that reference each other, see also LinkdToplologyProvider.matchCdpLinks()
             Pair<OnmsNode, OnmsNode> pair = pairs.next();
@@ -69,25 +70,35 @@ public class OspfProtocol extends Protocol<OspfElement> {
             InetAddress ospfIpAddr = inetAddressCreator.next();
             InetAddress ospfRemIpAddr = inetAddressCreator.next();
 
+            // Find some ports on the source and target nodes to link together
+            OnmsTopologyPort sourcePort = getPortForNode(sourceNode.getId()).orElseThrow(() -> new RuntimeException(
+                    "Could not find a port for node Id: " + sourceNode.getId()));
+            OnmsTopologyPort targetPort = getPortForNode(targetNode.getId()).orElseThrow(() -> new RuntimeException(
+                    "Could not find a port for node Id: " + targetNode.getId()));
+
             OspfLink sourceLink = createLink(
                     sourceNode,
                     ospfIpAddr,
-                    ospfRemIpAddr
+                    ospfRemIpAddr,
+                    sourcePort.getIfindex()
             );
             links.add(sourceLink);
 
             OspfLink targetLink = createLink(
                     targetNode,
                     ospfRemIpAddr,
-                    ospfIpAddr
+                    ospfIpAddr,
+                    targetPort.getIfindex()
             );
             links.add(targetLink);
-            context.currentProgress(String.format("Linked node %s with node %s", sourceNode.getLabel(), targetNode.getLabel()));
+            addEdge(sourcePort, targetPort);
+            context.currentProgress(String.format("Linked node %s with node %s", sourceNode.getLabel(),
+                    targetNode.getLabel()));
         }
         return links;
     }
 
-    private OspfLink createLink(OnmsNode node, InetAddress ipAddress, InetAddress remoteAddress) {
+    private OspfLink createLink(OnmsNode node, InetAddress ipAddress, InetAddress remoteAddress, int ifIndex) {
         OspfLink link = new OspfLink();
         link.setNode(node);
         link.setOspfIpAddr(ipAddress);
@@ -95,7 +106,7 @@ public class OspfProtocol extends Protocol<OspfElement> {
 
         link.setOspfIpMask(this.inetAddressCreator.next());
         link.setOspfAddressLessIndex(3);
-        link.setOspfIfIndex(3);
+        link.setOspfIfIndex(ifIndex);
         link.setOspfRemRouterId(this.inetAddressCreator.next());
         link.setOspfRemAddressLessIndex(3);
         link.setOspfLinkLastPollTime(new Date());

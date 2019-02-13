@@ -42,6 +42,7 @@ import org.opennms.netmgt.enlinkd.model.CdpElement;
 import org.opennms.netmgt.enlinkd.model.CdpLink;
 import org.opennms.netmgt.enlinkd.model.OspfElement;
 import org.opennms.netmgt.model.OnmsNode;
+import org.opennms.netmgt.topologies.service.api.OnmsTopologyPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,7 +58,7 @@ public class CdpProtocol extends Protocol<CdpElement> {
     public void createAndPersistProtocolSpecificEntities(List<OnmsNode> nodes) {
         List<CdpElement> cdpElements = createCdpElements(nodes);
         context.getTopologyPersister().persist(cdpElements);
-        List<CdpLink> links = createCdpLinks(cdpElements);
+        List<CdpLink> links = createLinks(cdpElements);
         context.getTopologyPersister().persist(links);
     }
 
@@ -79,40 +80,43 @@ public class CdpProtocol extends Protocol<CdpElement> {
         return cdpElement;
     }
 
-    private List<CdpLink> createCdpLinks(List<CdpElement> cdpElements) {
+    private List<CdpLink> createLinks(List<CdpElement> cdpElements) {
         PairGenerator<CdpElement> pairs = createPairGenerator(cdpElements);
         List<CdpLink> links = new ArrayList<>();
-        for (int i = 0; i < topologySettings.getAmountLinks()/2; i++) {
+        for (int i = 0; i < topologySettings.getAmountLinks() / 2; i++) {
 
             // We create 2 links that reference each other, see also LinkdToplologyProvider.matchCdpLinks()
             Pair<CdpElement, CdpElement> pair = pairs.next();
-            CdpElement sourceCdpElement = pair.getLeft();
-            CdpElement targetCdpElement = pair.getRight();
-            CdpLink sourceLink = createCdpLink(
-                    sourceCdpElement.getNode(),
-                    UUID.randomUUID().toString(),
-                    UUID.randomUUID().toString(),
-                    targetCdpElement.getCdpGlobalDeviceId()
-            );
+            CdpElement sourceElement = pair.getLeft();
+            CdpElement targetElement = pair.getRight();
+
+            // Find some ports on the source and target nodes to link together
+            OnmsTopologyPort sourcePort =
+                    getPortForNode(sourceElement.getNode().getId()).orElseThrow(() -> new RuntimeException("Could not" +
+                            " find a port for node Id: " + sourceElement.getNode().getId()));
+            OnmsTopologyPort targetPort =
+                    getPortForNode(targetElement.getNode().getId()).orElseThrow(() -> new RuntimeException("Could not" +
+                            " find a port for node Id: " + targetElement.getNode().getId()));
+
+            CdpLink sourceLink = createCdpLink(sourceElement.getNode(), UUID.randomUUID().toString(),
+                    UUID.randomUUID().toString(), targetElement.getCdpGlobalDeviceId(), sourcePort.getIfindex());
             links.add(sourceLink);
 
             String targetCdpCacheDevicePort = sourceLink.getCdpInterfaceName();
             String targetCdpInterfaceName = sourceLink.getCdpCacheDevicePort();
-            String targetCdpGlobalDeviceId = sourceCdpElement.getCdpGlobalDeviceId();
-            CdpLink targetLink = createCdpLink(
-                    targetCdpElement.getNode(),
-                    targetCdpInterfaceName,
-                    targetCdpCacheDevicePort,
-                    targetCdpGlobalDeviceId
-            );
+            String targetCdpGlobalDeviceId = sourceElement.getCdpGlobalDeviceId();
+            CdpLink targetLink = createCdpLink(targetElement.getNode(), targetCdpInterfaceName,
+                    targetCdpCacheDevicePort, targetCdpGlobalDeviceId, targetPort.getIfindex());
             links.add(targetLink);
-            LOG.debug("Linked node {} with node {}", sourceCdpElement.getNode().getLabel(), targetCdpElement.getNode().getLabel());
+            addEdge(sourcePort, targetPort);
+            context.currentProgress(String.format("Linked node %s with node %s", sourceElement.getNode().getLabel(),
+                    targetElement.getNode().getLabel()));
         }
         return links;
     }
 
     private CdpLink createCdpLink(OnmsNode node, String cdpInterfaceName, String cdpCacheDevicePort,
-                                  String cdpCacheDeviceId) {
+                                  String cdpCacheDeviceId, int ifIndex) {
         CdpLink link = new CdpLink();
         link.setCdpCacheDeviceId(cdpCacheDeviceId);
         link.setCdpInterfaceName(cdpInterfaceName);
@@ -122,7 +126,7 @@ public class CdpProtocol extends Protocol<CdpElement> {
         link.setCdpCacheAddress("CdpCacheAddress");
         link.setCdpCacheDeviceIndex(33);
         link.setCdpCacheDevicePlatform("CdpCacheDevicePlatform");
-        link.setCdpCacheIfIndex(33);
+        link.setCdpCacheIfIndex(ifIndex);
         link.setCdpCacheVersion("CdpCacheVersion");
         link.setCdpLinkLastPollTime(new Date());
         return link;

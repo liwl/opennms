@@ -28,6 +28,10 @@
 
 package org.opennms.enlinkd.generator;
 
+import java.util.Objects;
+
+import org.opennms.netmgt.topologies.service.api.OnmsTopologyDao;
+
 public class TopologySettings {
     private final int amountNodes;
 
@@ -42,6 +46,8 @@ public class TopologySettings {
     private final TopologyGenerator.Topology topology;
 
     private final TopologyGenerator.Protocol protocol;
+    
+    private final OnmsTopologyDao onmsTopologyDao;
 
     private TopologySettings(
             Integer amountNodes,
@@ -50,7 +56,8 @@ public class TopologySettings {
             Integer amountSnmpInterfaces,
             Integer amountIpInterfaces,
             TopologyGenerator.Topology topology,
-            TopologyGenerator.Protocol protocol) {
+            TopologyGenerator.Protocol protocol,
+            OnmsTopologyDao onmsTopologyDao) {
         this.amountNodes = setToDefaultIfNotSet(amountNodes, 10);
         this.amountElements = setToDefaultIfNotSet(amountElements, this.amountNodes);
         this.amountLinks = setToDefaultIfNotSet(amountLinks, this.amountElements);
@@ -58,6 +65,7 @@ public class TopologySettings {
         this.amountIpInterfaces = setToDefaultIfNotSet(amountIpInterfaces, this.amountNodes * 2);
         this.topology = setToDefaultIfNotSet(topology, TopologyGenerator.Topology.random);
         this.protocol = setToDefaultIfNotSet(protocol, TopologyGenerator.Protocol.cdp);
+        this.onmsTopologyDao = Objects.requireNonNull(onmsTopologyDao);
     }
 
     private <T> T setToDefaultIfNotSet(T value, T defaultValue) {
@@ -106,6 +114,10 @@ public class TopologySettings {
         return protocol;
     }
 
+    public OnmsTopologyDao getOnmsTopologyDao() {
+        return onmsTopologyDao;
+    }
+
     public static TopologySettingsBuilder builder() {
         return new TopologySettingsBuilder();
     }
@@ -118,6 +130,7 @@ public class TopologySettings {
         private Integer amountIpInterfaces;
         private TopologyGenerator.Topology topology;
         private TopologyGenerator.Protocol protocol;
+        private OnmsTopologyDao onmsTopologyDao;
 
         private TopologySettingsBuilder() {
         }
@@ -157,8 +170,13 @@ public class TopologySettings {
             return this;
         }
 
+        public TopologySettingsBuilder topologyDao(OnmsTopologyDao onmsTopologyDao) {
+            this.onmsTopologyDao = onmsTopologyDao;
+            return this;
+        }
+
         public TopologySettings build() {
-            return new TopologySettings(amountNodes, amountElements, amountLinks, amountSnmpInterfaces, amountIpInterfaces, topology, protocol);
+            return new TopologySettings(amountNodes, amountElements, amountLinks, amountSnmpInterfaces, amountIpInterfaces, topology, protocol, onmsTopologyDao);
         }
 
     }

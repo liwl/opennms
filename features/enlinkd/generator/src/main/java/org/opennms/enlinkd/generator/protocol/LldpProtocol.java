@@ -42,6 +42,7 @@ import org.opennms.enlinkd.generator.topology.PairGenerator;
 import org.opennms.netmgt.enlinkd.model.LldpElement;
 import org.opennms.netmgt.enlinkd.model.LldpLink;
 import org.opennms.netmgt.model.OnmsNode;
+import org.opennms.netmgt.topologies.service.api.OnmsTopologyPort;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,38 +86,48 @@ public class LldpProtocol extends Protocol<LldpElement> {
     private List<LldpLink> createLinks(List<LldpElement> elements) {
         PairGenerator<LldpElement> pairs = createPairGenerator(elements);
         List<LldpLink> links = new ArrayList<>();
-        for (int i = 0; i < topologySettings.getAmountLinks()/2; i++) {
+        for (int i = 0; i < topologySettings.getAmountLinks() / 2; i++) {
 
             // We create 2 links that reference each other, see also LinkdToplologyProvider.match...Links()
             Pair<LldpElement, LldpElement> pair = pairs.next();
             LldpElement sourceElement = pair.getLeft();
             LldpElement targetElement = pair.getRight();
 
-            String portId = UUID.randomUUID().toString();
-            String portIdRemote = UUID.randomUUID().toString();
-            LldpUtils.LldpPortIdSubType portIdSubType = LldpUtils.LldpPortIdSubType.LLDP_PORTID_SUBTYPE_MACADDRESS;
-            LldpUtils.LldpPortIdSubType portIdSubTypeRemote = LldpUtils.LldpPortIdSubType.LLDP_PORTID_SUBTYPE_MACADDRESS;
+            // Find some ports on the source and target nodes to link together
+            OnmsTopologyPort sourcePort =
+                    getPortForNode(sourceElement.getNode().getId()).orElseThrow(() -> new RuntimeException("Could not" +
+                            " find a port for node Id: " + sourceElement.getNode().getId()));
+            OnmsTopologyPort targetPort =
+                    getPortForNode(targetElement.getNode().getId()).orElseThrow(() -> new RuntimeException("Could not" +
+                            " find a port for node Id: " + targetElement.getNode().getId()));
 
-            LldpLink sourceLink = createLink(
-                    sourceElement.getNode(),
-                    portId, portIdSubType, portIdRemote, portIdSubTypeRemote, targetElement.getLldpChassisId()
-            );
+            int sourcePortIfIndex = sourcePort.getIfindex();
+            int targetPortIfIndex = sourcePort.getIfindex();
+            String portId = sourcePort.getId();
+            String portIdRemote = targetPort.getId();
+            LldpUtils.LldpPortIdSubType portIdSubType = LldpUtils.LldpPortIdSubType.LLDP_PORTID_SUBTYPE_MACADDRESS;
+            LldpUtils.LldpPortIdSubType portIdSubTypeRemote =
+                    LldpUtils.LldpPortIdSubType.LLDP_PORTID_SUBTYPE_MACADDRESS;
+
+            LldpLink sourceLink = createLink(sourceElement.getNode(), portId, portIdSubType, portIdRemote,
+                    portIdSubTypeRemote, targetElement.getLldpChassisId(), sourcePortIfIndex);
             links.add(sourceLink);
 
-            LldpLink targetLink = createLink(
-                    targetElement.getNode(),
-                    portIdRemote, portIdSubTypeRemote, portId, portIdSubType, sourceElement.getLldpChassisId()
-            );
+            LldpLink targetLink = createLink(targetElement.getNode(), portIdRemote, portIdSubTypeRemote, portId,
+                    portIdSubType, sourceElement.getLldpChassisId(), targetPortIfIndex);
             links.add(targetLink);
+            addEdge(sourcePort, targetPort);
 
-            LOG.debug("Linked node {} with node {}", sourceElement.getNode().getLabel(), targetElement.getNode().getLabel());
+            context.currentProgress(String.format("Linked node %s with node %s", sourceElement.getNode().getLabel(),
+                    targetElement.getNode().getLabel()));
         }
         return links;
     }
 
 
-    private LldpLink createLink(OnmsNode node, String portId, LldpUtils.LldpPortIdSubType portIdSubType
-            , String remotePortId, LldpUtils.LldpPortIdSubType remotePortIdSubType, String remoteChassisId) {
+    private LldpLink createLink(OnmsNode node, String portId, LldpUtils.LldpPortIdSubType portIdSubType,
+                                String remotePortId, LldpUtils.LldpPortIdSubType remotePortIdSubType,
+                                String remoteChassisId, int ifIndex) {
         LldpLink link = new LldpLink();
         link.setLldpPortId(portId);
         link.setLldpPortIdSubType(portIdSubType);
@@ -124,11 +135,11 @@ public class LldpProtocol extends Protocol<LldpElement> {
         link.setLldpRemPortIdSubType(remotePortIdSubType);
         link.setLldpRemChassisId(remoteChassisId);
         link.setNode(node);
+        link.setLldpPortIfindex(ifIndex);
 
         // static attributes:
         link.setLldpRemChassisIdSubType(LldpUtils.LldpChassisIdSubType.LLDP_CHASSISID_SUBTYPE_CHASSISCOMPONENT); // shouldn't be relevant for match => set it fixed
         link.setLldpLocalPortNum(123);
-        link.setLldpPortIfindex(123);
         link.setLldpLinkLastPollTime(new Date());
         link.setLldpPortDescr("lldpportdescr");
         link.setLldpRemSysname("lldpRemSysname");
