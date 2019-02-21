@@ -1,0 +1,30 @@
+// Allow GitHub image rendering
+:imagesdir: ../../images
+
+=== Exposing JDBC drivers to Minion
+
+For any JDBC service to be detected/polled/collected, corresponding JDBC driver needs to be installed in minion.
+Following are steps to install JDBC driver.
+
+* JDBC driver jar needs to be copied into `minion/repositories/default` by following maven repositories pattern.
+  For ex: Mysql driver jar should be placed in `repositories/core/mysql/mysql-connector-java/8.0.15/mysql-connector-java-8.0.15.jar`
+
+* Install this new jar as bundle as follows.
+
+[source, sh]
+----
+bundle:install -s wrap:mvn:mysql/mysql-connector-java/8.0.15
+----
+
+* For these drivers to be loaded, dynamic-import needs to be enabled on corresponding minion bundles. Find jdbc related bundles in minion and enable `dynamic-import` on those bundles. Search for `detector-jdbc`, `monitors`, `jdbc-collectors` for detector, monitor, collector respectively.
+   Following is an example for finding bundle id for 'detector-jdbc' and enable dynamic-import with the id.
+
+[source, sh]
+----
+$ ssh -p 8101 admin@localhost
+---
+admin@minion> bundle:list -s | grep -i detector-jdbc
+311 │ Active  │  80 │ 24.0.0.SNAPSHOT  │ org.opennms.opennms-detector-jdbc
+admin@minion> bundle:dynamic-import 311
+Enabling dynamic imports on bundle org.opennms.opennms-detector-jdbc [311]
+----
